@@ -1,0 +1,2204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打字机AI · 会逐字打字的本地聊天机器人</title>
+    <meta name="description" content="打字机AI（Yuansu AI）：本地运行的 Python 聊天机器人，逐字打字机输出，7 种模型人格，1740 条关键词语料，附 GUI 界面与实用小工具。当前最新版 Cyber 2.0。">
+    <style>
+        /* ===== 全局重置 & 火绒风格基础 ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: #ffffff;
+            color: #333333;
+            font-size: 14px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        a {
+            color: #333;
+            text-decoration: none;
+            transition: color .2s;
+        }
+
+        a:hover {
+            color: #ff8400;
+        }
+
+        ul,
+        ol {
+            list-style: none;
+        }
+
+        .container {
+            width: 1200px;
+            max-width: 94%;
+            margin: 0 auto;
+        }
+
+        img {
+            display: block;
+            max-width: 100%;
+        }
+
+        /* ===== 滚动淡入动画 ===== */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(36px);
+            transition: opacity .8s cubic-bezier(.22,.61,.36,1), transform .8s cubic-bezier(.22,.61,.36,1);
+        }
+
+        .fade-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .fade-in {
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+        }
+
+        /* 延迟 */
+        .delay-1 { transition-delay: .1s; }
+        .delay-2 { transition-delay: .2s; }
+        .delay-3 { transition-delay: .3s; }
+        .delay-4 { transition-delay: .4s; }
+
+        /* ===== 顶部通栏 ===== */
+        .top-tip {
+            background: #f8f8f8;
+            border-bottom: 1px solid #eaeaea;
+            color: #666;
+            font-size: 13px;
+            text-align: center;
+            padding: 8px 0;
+        }
+
+        .top-tip a {
+            color: #1a6dff;
+            font-weight: 600;
+            margin-left: 6px;
+            position: relative;
+        }
+
+        .top-tip a:hover {
+            color: #0052cc;
+            text-decoration: underline;
+        }
+
+        /* ===== 导航栏 ===== */
+        nav {
+            border-bottom: 1px solid #eaeaea;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: box-shadow .3s;
+        }
+
+        nav.scrolled {
+            box-shadow: 0 2px 16px rgba(0, 0, 0, .06);
+        }
+
+        .nav-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 70px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .brand .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .brand:hover .logo {
+            transform: rotate(-8deg) scale(1.08);
+        }
+
+        .brand .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .brand small {
+            font-size: 13px;
+            color: #999;
+            font-weight: 400;
+            margin-left: 4px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            font-size: 15px;
+            color: #555;
+        }
+
+        .nav-links a {
+            position: relative;
+            padding: 8px 0;
+        }
+
+        .nav-links a:hover {
+            color: #ff8400;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 0;
+            height: 2px;
+            background: #ff8400;
+            transition: width .25s;
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .nav-cta {
+            display: inline-block;
+            background: #ff8400;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 9px 26px;
+            border-radius: 6px;
+            transition: background .2s, transform .2s, box-shadow .2s;
+        }
+
+        .nav-cta:hover {
+            background: #e67600;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(255, 132, 0, .3);
+        }
+
+        @media (max-width: 820px) {
+            .nav-links {
+                display: none;
+            }
+        }
+
+        /* ===== 通用区块标题 ===== */
+        .section-tag {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: #ff8400;
+            background: #fff5eb;
+            border: 1px solid #ffe0c0;
+            padding: 2px 14px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+            text-transform: uppercase;
+        }
+
+        .section-title {
+            font-size: 30px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            letter-spacing: .5px;
+        }
+
+        .section-sub {
+            font-size: 15px;
+            color: #888;
+            max-width: 700px;
+            margin-bottom: 10px;
+        }
+
+        section {
+            padding: 70px 0;
+        }
+
+        /* ===== Hero 区域 ===== */
+        .hero {
+            padding: 60px 0 70px;
+            background: #fafafa;
+            border-bottom: 1px solid #eaeaea;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -160px;
+            right: -160px;
+            width: 420px;
+            height: 420px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 132, 0, .07), transparent 70%);
+            pointer-events: none;
+            animation: heroGlow 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes heroGlow {
+            0% { transform: scale(1) translate(0, 0); opacity: .6; }
+            100% { transform: scale(1.25) translate(-24px, 24px); opacity: 1; }
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            position: relative;
+        }
+
+        @media (max-width: 900px) {
+            .hero-grid {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+        }
+
+        .hero h1 {
+            font-size: 42px;
+            font-weight: 600;
+            line-height: 1.3;
+            color: #1a1a1a;
+            margin-bottom: 18px;
+        }
+
+        .hero h1 .grad {
+            color: #ff8400;
+            background: none;
+            -webkit-text-fill-color: currentColor;
+            position: relative;
+            display: inline-block;
+        }
+
+        .hero h1 .grad::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 2px;
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 132, 0, .15);
+            border-radius: 4px;
+            z-index: -1;
+        }
+
+        .hero p.lead {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 30px;
+            max-width: 520px;
+            line-height: 1.8;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background: #ff8400;
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 14px 38px;
+            border-radius: 6px;
+            transition: background .2s, transform .2s, box-shadow .2s;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .25), transparent);
+            transition: left .5s;
+        }
+
+        .btn-primary:hover {
+            background: #e67600;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(255, 132, 0, .35);
+        }
+
+        .btn-primary:hover::after {
+            left: 100%;
+        }
+
+        .btn-ghost {
+            display: inline-block;
+            background: #fff;
+            color: #555;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 13px 30px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            transition: all .25s;
+        }
+
+        .btn-ghost:hover {
+            border-color: #ff8400;
+            color: #ff8400;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(255, 132, 0, .12);
+        }
+
+        .hero-note {
+            margin-top: 16px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        /* 终端窗口 */
+        .term {
+            background: #1e1e1e;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #333;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+            transition: transform .4s cubic-bezier(.22,.61,.36,1), box-shadow .4s;
+        }
+
+        .term:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, .18);
+        }
+
+        .term-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            background: #2a2a2a;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .dot.r {
+            background: #ff5f57;
+        }
+
+        .dot.y {
+            background: #febc2e;
+        }
+
+        .dot.g {
+            background: #28c840;
+        }
+
+        .term-title {
+            margin-left: 8px;
+            font-size: 12px;
+            color: #888;
+            font-family: Consolas, monospace;
+        }
+
+        .term-body {
+            padding: 20px 22px 26px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+            min-height: 280px;
+            color: #ddd;
+            line-height: 1.7;
+        }
+
+        .term-body .u {
+            color: #a0b4d0;
+        }
+
+        .term-body .ai {
+            color: #8fd4a8;
+        }
+
+        .term-body .meta {
+            color: #777;
+            font-size: 12.5px;
+        }
+
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #8fd4a8;
+            vertical-align: -2px;
+            margin-left: 2px;
+            animation: blink .8s steps(1) infinite;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* ===== 数据条 ===== */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 10px;
+            padding: 30px 20px;
+            margin-top: -30px;
+            position: relative;
+            z-index: 2;
+            transition: box-shadow .3s;
+        }
+
+        .stats:hover {
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .07);
+        }
+
+        @media (max-width: 820px) {
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat .num {
+            font-size: 32px;
+            font-weight: 600;
+            color: #ff8400;
+        }
+
+        .stat .lbl {
+            font-size: 13px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        /* ===== 关于区块 ===== */
+        .about {
+            background: #fafafa;
+            border-top: 1px solid #eaeaea;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 880px) {
+            .about-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .about-quote {
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-left: 4px solid #ff8400;
+            border-radius: 6px;
+            padding: 24px 28px;
+            font-size: 15px;
+            color: #555;
+            line-height: 1.8;
+            transition: transform .3s, box-shadow .3s;
+        }
+
+        .about-quote:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, .06);
+        }
+
+        .about-quote b {
+            color: #222;
+        }
+
+        .about-list li {
+            position: relative;
+            padding: 10px 0 10px 24px;
+            color: #555;
+            font-size: 15px;
+            border-bottom: 1px dashed #eaeaea;
+            transition: padding-left .25s, color .25s;
+        }
+
+        .about-list li:hover {
+            padding-left: 32px;
+            color: #ff8400;
+        }
+
+        .about-list li:last-child {
+            border-bottom: none;
+        }
+
+        .about-list li::before {
+            content: "·";
+            position: absolute;
+            left: 4px;
+            top: 10px;
+            color: #ff8400;
+            font-weight: 700;
+            font-size: 20px;
+            line-height: 1;
+            transition: transform .25s;
+        }
+
+        .about-list li:hover::before {
+            transform: scale(1.4);
+        }
+
+        /* ===== 功能特色 ===== */
+        .features {
+            background: #fff;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 920px) {
+            .feature-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 620px) {
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .feature {
+            background: #fafafa;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 28px 24px;
+            transition: border-color .25s, box-shadow .25s, transform .25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #ff8400, #ffb266);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .35s cubic-bezier(.22,.61,.36,1);
+        }
+
+        .feature:hover {
+            border-color: #ff8400;
+            box-shadow: 0 12px 30px rgba(255, 132, 0, .1);
+            transform: translateY(-4px);
+        }
+
+        .feature:hover::after {
+            transform: scaleX(1);
+        }
+
+        .feature .ico {
+            width: 42px;
+            height: 42px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin-bottom: 16px;
+            background: #fff5eb;
+            color: #ff8400;
+            transition: transform .35s cubic-bezier(.34,1.56,.64,1), background .25s;
+        }
+
+        .feature:hover .ico {
+            transform: rotate(-8deg) scale(1.12);
+            background: #ffe8d1;
+        }
+
+        .feature h3 {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+
+        .feature p {
+            font-size: 14px;
+            color: #777;
+            line-height: 1.7;
+        }
+
+        .feature .since {
+            display: inline-block;
+            margin-top: 14px;
+            font-size: 12px;
+            color: #aaa;
+            border-top: 1px solid #eaeaea;
+            padding-top: 12px;
+            width: 100%;
+        }
+
+        .feature code {
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            background: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 1px 6px;
+            color: #c45a00;
+        }
+
+        /* ===== 检查更新 ===== */
+        .update {
+            background: #fafafa;
+            border-top: 1px solid #eaeaea;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .update-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-top: 36px;
+            align-items: start;
+        }
+
+        @media (max-width: 880px) {
+            .update-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+        }
+
+        .update-steps {
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 30px 32px;
+            transition: transform .3s, box-shadow .3s;
+        }
+
+        .update-steps:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .06);
+        }
+
+        .update-steps h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .update-steps h3 .step-ico {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #fff5eb;
+            color: #ff8400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px dashed #eaeaea;
+        }
+
+        .step-item:last-child {
+            border-bottom: none;
+        }
+
+        .step-item .step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #ff8400;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .step-item .step-content {
+            flex: 1;
+        }
+
+        .step-item .step-content strong {
+            display: block;
+            font-size: 14.5px;
+            color: #1a1a1a;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-item .step-content p {
+            font-size: 14px;
+            color: #777;
+            line-height: 1.7;
+        }
+
+        .step-item .step-content code {
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            background: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 1px 7px;
+            color: #c45a00;
+        }
+
+        .update-preview {
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 30px 32px;
+            transition: transform .3s, box-shadow .3s;
+        }
+
+        .update-preview:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .06);
+        }
+
+        .update-preview h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .update-preview h3 .step-ico {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #fff5eb;
+            color: #ff8400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        /* 终端模拟更新检测 */
+        .update-term {
+            background: #1e1e1e;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #333;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+        }
+
+        .update-term .term-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            background: #2a2a2a;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .update-term .term-body {
+            padding: 18px 20px 22px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13.5px;
+            min-height: 220px;
+            color: #ddd;
+            line-height: 1.8;
+        }
+
+        .update-term .u {
+            color: #a0b4d0;
+        }
+
+        .update-term .ai {
+            color: #8fd4a8;
+        }
+
+        .update-term .meta {
+            color: #777;
+            font-size: 12.5px;
+        }
+
+        .update-term .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: #8fd4a8;
+            vertical-align: -2px;
+            margin-left: 2px;
+            animation: blink .8s steps(1) infinite;
+        }
+
+        .update-badge {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #2e9e5b;
+            background: #e8f7ee;
+            border: 1px solid #b8e6c8;
+            padding: 2px 12px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+
+        .update-link {
+            display: inline-block;
+            margin-top: 18px;
+            color: #1a6dff;
+            font-weight: 600;
+            font-size: 14px;
+            transition: color .2s, transform .2s;
+        }
+
+        .update-link:hover {
+            color: #0052cc;
+            transform: translateX(4px);
+        }
+
+        /* ===== 模型人格 ===== */
+        .model-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 36px;
+        }
+
+        .model-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 30px;
+            padding: 10px 26px;
+            font-weight: 500;
+            font-size: 15px;
+            color: #333;
+            transition: border-color .25s, box-shadow .25s, transform .25s;
+            cursor: default;
+        }
+
+        .model-chip:hover {
+            border-color: #ff8400;
+            box-shadow: 0 8px 20px rgba(255, 132, 0, .12);
+            transform: translateY(-3px);
+        }
+
+        .model-chip .m-ico {
+            font-size: 20px;
+            transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .model-chip:hover .m-ico {
+            transform: scale(1.2) rotate(6deg);
+        }
+
+        .model-chip small {
+            color: #aaa;
+            font-weight: 400;
+            font-size: 12px;
+        }
+
+        .model-note {
+            margin-top: 24px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        /* ===== 版本档案 ===== */
+        .archive {
+            background: #fafafa;
+            border-top: 1px solid #eaeaea;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 0;
+        }
+
+        .tab {
+            font-size: 15px;
+            font-weight: 500;
+            color: #888;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 10px 22px;
+            cursor: pointer;
+            transition: all .25s;
+            user-select: none;
+            position: relative;
+        }
+
+        .tab:hover {
+            color: #ff8400;
+        }
+
+        .tab.on {
+            color: #ff8400;
+            border-bottom-color: #ff8400;
+        }
+
+        .ver-list {
+            margin-top: 30px;
+            display: none;
+            animation: fadeSlideIn .5s cubic-bezier(.22,.61,.36,1);
+        }
+
+        .ver-list.show {
+            display: block;
+        }
+
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(16px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ver {
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 26px 30px;
+            margin-bottom: 18px;
+            transition: border-color .25s, box-shadow .25s, transform .25s;
+        }
+
+        .ver:hover {
+            border-color: #ff8400;
+            box-shadow: 0 10px 26px rgba(0, 0, 0, .06);
+            transform: translateY(-3px);
+        }
+
+        .ver-head {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .ver-name {
+            font-size: 19px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .ver-pill {
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+            background: #ff8400;
+            padding: 2px 12px;
+            border-radius: 20px;
+            letter-spacing: .5px;
+        }
+
+        .ver-pill.gray {
+            background: #bbb;
+        }
+
+        .ver-pill.green {
+            background: #2e9e5b;
+        }
+
+        .ver p {
+            font-size: 14.5px;
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .ver .facts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .fact {
+            font-size: 12.5px;
+            color: #666;
+            background: #f7f7f7;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 4px 14px;
+            transition: background .2s, border-color .2s, transform .2s;
+        }
+
+        .fact:hover {
+            background: #fff5eb;
+            border-color: #ffd9b3;
+            transform: translateY(-2px);
+        }
+
+        .fact b {
+            color: #ff8400;
+        }
+
+        .ver .dir {
+            margin-top: 14px;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .ver code {
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            background: #f5f5f5;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 1px 7px;
+            color: #c45a00;
+        }
+
+        /* ===== 下载区 ===== */
+        .download {
+            background: #fff;
+        }
+
+        .dl-card {
+            background: #fafafa;
+            border: 1px solid #eaeaea;
+            border-radius: 12px;
+            padding: 56px 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow .35s;
+        }
+
+        .dl-card::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 132, 0, .08), transparent 70%);
+            pointer-events: none;
+            animation: dlGlow 6s ease-in-out infinite alternate;
+        }
+
+        @keyframes dlGlow {
+            0% { transform: scale(1) translate(0, 0); opacity: .5; }
+            100% { transform: scale(1.3) translate(-30px, 30px); opacity: 1; }
+        }
+
+        .dl-card:hover {
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .08);
+        }
+
+        .dl-card h2 {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .dl-card p {
+            font-size: 16px;
+            color: #666;
+            margin: 0 auto 32px;
+            max-width: 640px;
+            line-height: 1.8;
+            position: relative;
+        }
+
+        .dl-card p code {
+            font-family: Consolas, monospace;
+            font-size: 14px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            padding: 1px 8px;
+            color: #c45a00;
+        }
+
+        .dl-btn {
+            display: inline-block;
+            background: #ff8400;
+            color: #fff;
+            font-size: 17px;
+            font-weight: 600;
+            padding: 16px 48px;
+            border-radius: 6px;
+            transition: background .2s, transform .2s, box-shadow .2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dl-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .3), transparent);
+            transition: left .5s;
+        }
+
+        .dl-btn:hover {
+            background: #e67600;
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(255, 132, 0, .4);
+        }
+
+        .dl-btn:hover::after {
+            left: 100%;
+        }
+
+        .dl-meta {
+            margin-top: 20px;
+            font-size: 13px;
+            color: #999;
+            position: relative;
+        }
+
+        .dl-meta span {
+            margin: 0 8px;
+        }
+
+        .req-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 26px;
+            position: relative;
+        }
+
+        .req {
+            background: #fff;
+            border: 1px solid #eaeaea;
+            padding: 6px 20px;
+            border-radius: 30px;
+            font-size: 13px;
+            color: #666;
+            transition: border-color .2s, transform .2s, box-shadow .2s;
+        }
+
+        .req:hover {
+            border-color: #ff8400;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 132, 0, .1);
+        }
+
+        /* ===== FAQ ===== */
+        .faq {
+            background: #fafafa;
+            border-top: 1px solid #eaeaea;
+        }
+
+        .faq-list {
+            margin-top: 36px;
+            max-width: 880px;
+        }
+
+        details {
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 18px 24px;
+            margin-bottom: 12px;
+            transition: border-color .25s, box-shadow .25s, transform .25s;
+        }
+
+        details:hover {
+            border-color: #ff8400;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, .05);
+        }
+
+        details[open] {
+            border-color: #ff8400;
+            box-shadow: 0 8px 24px rgba(255, 132, 0, .08);
+        }
+
+        summary {
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #1a1a1a;
+        }
+
+        summary::-webkit-details-marker {
+            display: none;
+        }
+
+        summary::after {
+            content: "+";
+            font-size: 20px;
+            color: #ff8400;
+            font-weight: 400;
+            transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        details[open] summary::after {
+            transform: rotate(45deg);
+        }
+
+        details .ans {
+            margin-top: 12px;
+            font-size: 14.5px;
+            color: #666;
+            line-height: 1.8;
+            animation: ansIn .35s ease;
+        }
+
+        @keyframes ansIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        details .ans code {
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            background: #f5f5f5;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            padding: 1px 7px;
+            color: #c45a00;
+        }
+
+        /* ===== 页脚 ===== */
+        footer {
+            background: #2d2d2d;
+            color: #999;
+            padding: 44px 0 34px;
+            font-size: 13.5px;
+        }
+
+        .footer-inner {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #fff;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .footer-brand .logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            overflow: hidden;
+            flex-shrink: 0;
+            transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+        }
+
+        .footer-brand:hover .logo {
+            transform: rotate(-8deg) scale(1.1);
+        }
+
+        .footer-brand .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 28px;
+        }
+
+        .footer-links a {
+            color: #aaa;
+            transition: color .2s, transform .2s;
+            display: inline-block;
+        }
+
+        .footer-links a:hover {
+            color: #ff8400;
+            transform: translateY(-2px);
+        }
+
+        footer a:hover {
+            color: #ff8400;
+        }
+
+        /* 辅助类 */
+        .text-center {
+            text-align: center;
+        }
+
+        .mt-10 {
+            margin-top: 10px;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        /* ===== 回到顶部按钮 ===== */
+        .back-top {
+            position: fixed;
+            right: 28px;
+            bottom: 36px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #ff8400;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(16px);
+            transition: opacity .3s, visibility .3s, transform .3s, background .2s, box-shadow .2s;
+            z-index: 99;
+            box-shadow: 0 6px 20px rgba(255, 132, 0, .35);
+            border: none;
+            outline: none;
+        }
+
+        .back-top.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .back-top:hover {
+            background: #e67600;
+            box-shadow: 0 10px 26px rgba(255, 132, 0, .5);
+            transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部通栏 -->
+    <div class="top-tip">
+        🎉 最新版本 <b>Cyber 2.0</b> 已发布 —— 新增猜数字、每日运势、计算器与聊天记录导出！
+        <a href="#download">立即下载 →</a>
+    </div>
+
+    <!-- 导航 -->
+    <nav id="nav">
+        <div class="container nav-inner">
+            <a class="brand" href="#top">
+                <span class="logo"><img src="tx.png" alt="打字机AI Logo"></span>
+                打字机AI <small>Yuansu AI</small>
+            </a>
+            <div class="nav-links">
+                <a href="#about">产品介绍</a>
+                <a href="#features">功能特色</a>
+                <a href="#update">检查更新</a>
+                <a href="#archive">版本档案</a>
+                <a href="#faq">常见问题</a>
+            </div>
+            <a class="nav-cta" href="#download">下载</a>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <header class="hero" id="top">
+        <div class="container hero-grid">
+            <div class="fade-up">
+                <span class="section-tag">YUANSU AI · 本地聊天机器人</span>
+                <h1>会<span class="grad">"打字"</span>的<br>本地聊天机器人</h1>
+                <p class="lead">
+                    它模仿 DeepSeek 官网的输出方式：逐字打出回复，遇到标点自动停顿，回答之前还会先展示一段"思考过程"。
+                    无需联网，无需 API Key，解压即用。
+                </p>
+                <div class="hero-btns">
+                    <a class="btn-primary" href="https://silver.yukaidi.com/s/J5Qatz" target="_blank" rel="noopener">
+                        下载 Cyber 2.0
+                    </a>
+                    <a class="btn-ghost" href="#about">了解详情 →</a>
+                </div>
+                <p class="hero-note">从 Yukaidi 网盘下载 · 解压即用 · 完全免费</p>
+            </div>
+
+            <div class="term fade-up delay-2">
+                <div class="term-bar">
+                    <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                    <span class="term-title">typewriter-ai — main.py</span>
+                </div>
+                <div class="term-body">
+                    <div class="meta">Deepseek(Alpha) 已加载！New Chat（这是测试模型并无真实AI功能！）</div>
+                    <div style="height:8px"></div>
+                    <div class="u">你： 你好，介绍一下你自己</div>
+                    <div class="meta">嗯，用户输入了"你好，介绍一下你自己"，让我想想怎么回答...<span class="cursor"></span></div>
+                    <div class="ai">Deepseek：你好呀！我是打字机AI<span class="cursor" id="heroCursor"></span></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 数据条 -->
+    <div class="container">
+        <div class="stats fade-up">
+            <div class="stat">
+                <div class="num">10</div>
+                <div class="lbl">个版本，3 个系列</div>
+            </div>
+            <div class="stat">
+                <div class="num">1740</div>
+                <div class="lbl">条关键词语料</div>
+            </div>
+            <div class="stat">
+                <div class="num">7</div>
+                <div class="lbl">个模型人格</div>
+            </div>
+            <div class="stat">
+                <div class="num">0</div>
+                <div class="lbl">元 API 账单</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 关于 -->
+    <section class="about" id="about">
+        <div class="container">
+            <div class="fade-up">
+                <span class="section-tag">ABOUT</span>
+                <h2 class="section-title">关于打字机AI</h2>
+            </div>
+            <div class="about-grid">
+                <div class="about-quote fade-up delay-1">
+                    先说明一点：打字机AI 是一个"伪 AI"。它没有接入任何大模型，也没有 API，需要联网的只有天气查询。
+                    它的"智能"全部来自一个 <b>responses.json</b> 文件——根据你的输入匹配关键词，随机挑选一条回复，
+                    再用打字机效果逐字输出。<br><br>
+                    所以它本质上是一个聊天玩具，配上了一套完整逼真的"演出"。
+                </div>
+                <ul class="about-list fade-up delay-2">
+                    <li>不联网也能聊天，除天气查询外完全本地运行</li>
+                    <li>回复前会先展示"思考过程"，再逐字输出答案</li>
+                    <li>重复提问会触发专属的吐槽回复</li>
+                    <li>触发敏感词会被禁言，需要管理员解禁</li>
+                    <li>语料以 json 文件存储，可直接编辑定制性格</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 功能特色 -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="fade-up">
+                <span class="section-tag">FEATURES</span>
+                <h2 class="section-title">功能特色</h2>
+            </div>
+
+            <div class="feature-grid">
+                <div class="feature fade-up delay-1">
+                    <div class="ico">⌨</div>
+                    <h3>打字机特效</h3>
+                    <p>逐字输出，每 0.02 秒打一个字，遇到标点停顿 0.1 秒；另有"打完—删除—重打"的炫技版，以及只打不删的普通版。</p>
+                    <span class="since">Alpha 1.0 起就有</span>
+                </div>
+                <div class="feature fade-up delay-2">
+                    <div class="ico">🤖</div>
+                    <h3>7 个模型人格</h3>
+                    <p>Deepseek、豆包、千问、ChatGPT、Kimi……切换模型改变的是对话前缀与界面图标，回复引擎是同一套。</p>
+                    <span class="since">Kimi 是 Beta 1.0 加入的</span>
+                </div>
+                <div class="feature fade-up delay-3">
+                    <div class="ico">📚</div>
+                    <h3>1740 条语料</h3>
+                    <p>最大的一份语料库包含 1740 个关键词、403 KB，覆盖面广；未命中关键词时还有兜底回复，不会冷场。</p>
+                    <span class="since">Cyber 2.0 使用这份语料</span>
+                </div>
+                <div class="feature fade-up delay-1">
+                    <div class="ico">🖥</div>
+                    <h3>图形界面</h3>
+                    <p>tkinter 编写的聊天窗口：你的发言是蓝色，AI 回复是绿色，思考过程为灰色小字，每个模型有独立的窗口图标。终端模式同样保留。</p>
+                    <span class="since">Alpha 2.0 起有 GUI</span>
+                </div>
+                <div class="feature fade-up delay-2">
+                    <div class="ico">🌤</div>
+                    <h3>时间与天气查询</h3>
+                    <p>直接询问"几点了""今天天气"，程序会查询后再回答。支持 41 个城市，设置默认城市后无需重复输入地名。</p>
+                    <span class="since">Alpha 2.0 扩展版起</span>
+                </div>
+                <div class="feature fade-up delay-3">
+                    <div class="ico">🎮</div>
+                    <h3>猜数字 · 运势 · 计算器</h3>
+                    <p>输入"猜数字"开始游戏，"运势"查看当日宜忌，"1+2*3"直接给出结果。运势以日期为随机种子，同一天内结果固定。</p>
+                    <span class="since">Cyber 2.0 新增</span>
+                </div>
+                <div class="feature fade-up delay-1">
+                    <div class="ico">💾</div>
+                    <h3>聊天记录导出</h3>
+                    <p>点击 GUI 中的"导出记录"按钮，整段对话即可保存为 txt 文件，方便留存。</p>
+                    <span class="since">Cyber 2.0 新增</span>
+                </div>
+                <div class="feature fade-up delay-2">
+                    <div class="ico">🌍</div>
+                    <h3>中英双语界面</h3>
+                    <p>将代码中的 <code>ask("Deepseek")</code> 改为 <code>ask("Deepseek","en")</code>，界面文案即切换为英文。需要说明，语料本身仍是中文。</p>
+                    <span class="since">Beta 2.0 起</span>
+                </div>
+                <div class="feature fade-up delay-3">
+                    <div class="ico">🛡</div>
+                    <h3>禁言与解禁</h3>
+                    <p>命中敏感词后程序写入 banned.json 并退出，下次启动同样被拒绝。管理员运行解禁脚本后，程序会显示"恭喜解禁！欢迎回来！"</p>
+                    <span class="since">Alpha 1.0 起就有</span>
+                </div>
+                <div class="feature fade-up delay-1">
+                    <div class="ico">🔄</div>
+                    <h3>检查更新</h3>
+                    <p>输入你当前的版本号，程序自动比对最新版本，并给出下载地址。无需手动翻查日志。</p>
+                    <span class="since">Cyber 2.0 新增</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 检查更新 -->
+    <section class="update" id="update">
+        <div class="container">
+            <div class="fade-up">
+                <span class="section-tag">UPDATE</span>
+                <h2 class="section-title">检查更新</h2>
+                <p class="section-sub">输入你当前使用的版本号，程序会自动比对官方最新版本，并给出下载地址。</p>
+            </div>
+
+            <div class="update-grid">
+                <div class="update-steps fade-up delay-1">
+                    <h3><span class="step-ico">📋</span> 使用步骤</h3>
+                    <div class="step-item">
+                        <span class="step-num">1</span>
+                        <div class="step-content">
+                            <strong>输入当前版本</strong>
+                            <p>在程序启动后，根据提示输入你正在使用的版本号，例如 <code>Cyber 1.0</code> 或 <code>Beta 2.0</code>。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <span class="step-num">2</span>
+                        <div class="step-content">
+                            <strong>自动比对</strong>
+                            <p>程序将你的版本与内置的最新版本清单进行比对。若已是最新，会提示"当前已是最新版本"。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <span class="step-num">3</span>
+                        <div class="step-content">
+                            <strong>获取下载地址</strong>
+                            <p>若检测到新版本，程序会直接输出 Yukaidi 网盘的下载链接，复制到浏览器打开即可。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <span class="step-num">4</span>
+                        <div class="step-content">
+                            <strong>可选：自动打开</strong>
+                            <p>在支持的环境下，程序会调用系统默认浏览器直接打开下载页面，省去手动复制的步骤。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="update-preview fade-up delay-2">
+                    <h3><span class="step-ico">💻</span> 运行效果</h3>
+                    <div class="update-term">
+                        <div class="term-bar">
+                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                            <span class="term-title">check_update.py</span>
+                        </div>
+                        <div class="term-body">
+                            <div class="meta">===== 打字机AI 更新检测 =====</div>
+                            <div style="height:6px"></div>
+                            <div class="u">请输入当前版本：</div>
+                            <div>Cyber 1.0</div>
+                            <div style="height:6px"></div>
+                            <div class="meta">正在检查更新...</div>
+                            <div class="ai">检测到新版本：Cyber 2.0 <span class="update-badge">最新</span></div>
+                            <div style="height:6px"></div>
+                            <div class="ai">下载地址：</div>
+                            <div style="color:#1a6dff;">https://silver.yukaidi.com/s/J5Qatz</div>
+                            <div style="height:6px"></div>
+                            <div class="meta">正在打开浏览器...<span class="cursor"></span></div>
+                        </div>
+                    </div>
+                    <a class="update-link" href="https://silver.yukaidi.com/s/J5Qatz" target="_blank" rel="noopener">
+                        直接前往下载页 →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 模型人格 -->
+    <section id="models">
+        <div class="container">
+            <div class="fade-up">
+                <span class="section-tag">PERSONAS</span>
+                <h2 class="section-title">模型人格</h2>
+            </div>
+            <div class="model-row fade-up delay-1">
+                <div class="model-chip"><span class="m-ico">🐳</span> Deepseek <small>默认</small></div>
+                <div class="model-chip"><span class="m-ico">🫘</span> 豆包 <small>Doubao</small></div>
+                <div class="model-chip"><span class="m-ico">🌀</span> 千问 <small>Qwen</small></div>
+                <div class="model-chip"><span class="m-ico">💬</span> ChatGPT</div>
+                <div class="model-chip"><span class="m-ico">🌙</span> Kimi <small>Beta 1.0 加入</small></div>
+            </div>
+            <p class="model-note fade-up delay-2">输入 Doubao 会自动显示为豆包，输入 Qwen 自动显示为千问，可按喜好选择。</p>
+        </div>
+    </section>
+
+    <!-- 版本档案 -->
+    <section class="archive" id="archive">
+        <div class="container">
+            <div class="fade-up">
+                <span class="section-tag">ARCHIVE</span>
+                <h2 class="section-title">版本档案</h2>
+                <p class="section-sub">从一个终端小脚本，到带 GUI 和完整功能的桌面程序。每个版本都完整保留，均可运行。</p>
+            </div>
+
+            <div class="tabs fade-up delay-1">
+                <div class="tab on" data-tab="alpha">Alpha 系列 · 5 个版本</div>
+                <div class="tab" data-tab="beta">Beta 系列 · 3 个版本</div>
+                <div class="tab" data-tab="cyber">Cyber 系列 · 2 个版本</div>
+            </div>
+
+            <!-- Alpha -->
+            <div class="ver-list show" id="tab-alpha">
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">Alpha 1.0</span>
+                        <span class="ver-pill gray">起点</span>
+                    </div>
+                    <p>
+                        项目的第一个发行版本。纯终端运行，核心代码 pt.py 共 289 行，仅依赖 Python 标准库。
+                        打字机特效、关键词对话、禁言系统、六个模型人格都在这一版就位。
+                        发行了两个变体：内置提示词版只带 8 个关键词，是留给你自行扩展的模板；无内置提示词版预置了 1740 个关键词，开箱即用。
+                    </p>
+                    <div class="facts">
+                        <span class="fact">核心代码 <b>289 行</b></span>
+                        <span class="fact">语料 <b>8 / 1740</b> 个关键词（两个变体）</span>
+                        <span class="fact">纯终端，无 GUI</span>
+                    </div>
+                    <div class="dir">位置：alpha\1.0\内置提示词\ · alpha\1.0\无内置提示词\</div>
+                </div>
+
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">Alpha 2.0 GUI Beta 基础版</span>
+                        <span class="ver-pill gray">首次引入 GUI</span>
+                    </div>
+                    <p>
+                        GUI 的首次尝试。想使用窗口，需手动修改两行代码，把 <code>ask</code> 换成 <code>ask_gui</code>。
+                        界面是原生 tk 控件，还比较朴素，但用户发言蓝色、AI 回复绿色的设计，已经有了聊天软件的样子。
+                        脏话检测在 GUI 中也升级为弹窗提示。这版的更新日志把 beta 拼成了 beat，下一版才修正。
+                    </p>
+                    <div class="facts">
+                        <span class="fact">核心代码 <b>461 行</b></span>
+                        <span class="fact">语料 <b>8 个</b>关键词</span>
+                        <span class="fact">unban.py 改名 <b>unban(Admin).py</b></span>
+                    </div>
+                    <div class="dir">位置：alpha\2.0\GUI Beta\基础版\</div>
+                </div>
+
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">Alpha 2.0 GUI Beta 扩展版</span>
+                        <span class="ver-pill gray">首次支持天气查询</span>
+                    </div>
+                    <p>
+                        在基础版之上新增时间查询、天气查询与城市设置，第一次拆出 time_utils.py 和 weather_utils.py 两个模块，
+                        也是项目第一次引入第三方库 requests（天气走心知天气接口，支持 41 个城市）。
+                        这版的语料文件存在一个 JSON 语法错误，会导致程序无法启动——Alpha 3.0 修复的正是它。
+                    </p>
+                    <div class="facts">
+                        <span class="fact">核心代码 <b>528 行</b></span>
+                        <span class="fact">首次联网（天气 API）</span>
+                        <span class="fact">JSON 存在语法错误</span>
+                    </div>
+                    <div class="dir">位置：alpha\2.0\GUI Beta\扩展版\</div>
+                </div>
+
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">Alpha 2.0 扩展版无GUI版</span>
+                        <span class="ver-pill gray">命令行版</span>
+                    </div>
+                    <p>
+                        为服务器、远程终端等没有图形界面的环境准备的纯命令行版本，功能与 GUI 扩展版基本一致。
+                        遗憾的是打包时未附带 time_utils.py 和 weather_utils.py，需要这两个功能的话，
+                        要从 GUI 扩展版目录中复制这两个文件。
+                    </p>
+                    <div class="facts">
+                        <span class="fact">核心代码 <b>291 行</b></span>
+                        <span class="fact">无 tkinter 依赖</span>
+                        <span class="fact">缺两个工具模块</span>
+                    </div>
+                    <div class="dir">位置：alpha\2.0\扩展版无GUI版\</div>
+                </div>
+
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">Alpha 3.0</span>
+                        <span class="ver-pill gray">Alpha 收官</span>
+                    </div>
+                    <p>
+                        修复了 JSON 报错与部分提示词无法调用的问题，拼错的 beta 也改对了。
+                        语料从 8 个关键词扩充到 220 个。更重要的是，GUI 成为默认入口，双击 main.py 直接打开窗口，
+                        终端模式改为手动切换。从这版起不再区分基础版/扩展版，只保留单一目录。
+                    </p>
+                    <div class="facts">
+                        <span class="fact">核心代码 <b>556 行</b></span>
+                        <span class="fact">语料 <b>220 个</b>关键词</span>
+                        <span class="fact">GUI 设为默认</span>
+                    </div>
+                    <div class="dir">位置：alpha\3.0\</div>
+                </div>
+            </div>
+
+            <!-- Beta -->
+            <div class="ver-list" id="tab-beta">
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">Beta 1.0</span>
+                        <span class="ver-pill gray">界面升级</span>
+                    </div>
+                    <p>
+                        三件大事：新增第 7 个模型 Kimi；GUI 用 ttk 重做（clam 主题、浅灰背景、蓝色发送按钮），
+                        每个模型有了自己的窗口图标；语料从 220 个关键词一举扩充到 1183 个。
+                        从这版开始，它有了现代桌面程序的样子。
+                    </p>
+                    <div class="facts">
+                        <span class="fact">核心代码 <b>598 行</b></span>
+                        <span class="fact">语料 <b>1183 个</b>关键词</span>
+                        <span class="fact">新增模型 <b>Kimi</b></span>
+                        <span class="fact">ttk 美化 + 模型图标</span>
+                    </div>
+                    <div class="dir">位置：beta\1.0\</div>
+                </div>
+
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">Beta 2.0</span>
+                        <span class="ver-pill gray">中英双语</span>
+                    </div>
+                    <p>
+                        新增中英双语支持。18 条界面文案收进 LANG_TEXTS 映射表，通过 lang 参数即可在中文与英文之间切换。
+                        需要说明，英文目前只覆盖界面文案，语料本身仍是中文。语料与 Beta 1.0 完全相同。
+                    </p>
+                    <div class="facts">
+                        <span class="fact">核心代码 <b>584 行</b></span>
+                        <span class="fact">语料 <b>1183 个</b>（与上版相同）</span>
+                        <span class="fact">双语参数 <code>lang='zh'/'en'</code></span>
+                    </div>
+                    <div class="dir">位置：beta\2.0\</div>
+                </div>
+
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">Beta 2.0 Ciyo 粉丝特供版</span>
+                        <span class="ver-pill gray">粉丝定制</span>
+                    </div>
+                    <p>
+                        基于 Beta 2.0 为主播"Ciyo 西柚"的粉丝定制的特供版本，功能框架未做改动，
+                        只是将身份标识替换为"Ciyo 粉丝特供版"，并在语料中加入了一批粉丝向词条——
+                        关于 Ciyo 的提问，它会给出粉丝立场的回答。
+                        这是项目唯一的定制人格分支，也验证了语料定制的可行性。分发包为现成的 zip，可直接分享到粉丝群。
+                    </p>
+                    <div class="facts">
+                        <span class="fact">语料含 <b>Ciyo 词条</b></span>
+                        <span class="fact">附打包 zip</span>
+                        <span class="fact">与 Beta 2.0 框架一致</span>
+                    </div>
+                    <div class="dir">位置：beta\Ciyo粉丝 特供版 2.0\</div>
+                </div>
+            </div>
+
+            <!-- Cyber -->
+            <div class="ver-list" id="tab-cyber">
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">Cyber 1.0</span>
+                        <span class="ver-pill gray">架构重构</span>
+                    </div>
+                    <p>
+                        项目第一次架构重构。此前所有函数都散装在文件顶层，这版将它们归入两个类：
+                        打字输出相关进 print_tool，对话运行相关进 run_ai，
+                        调用方式改为 <code>run_ai.ask(...)</code>，代码结构从此清晰。
+                        功能与 Beta 2.0 持平，语料也是同一份。
+                    </p>
+                    <div class="facts">
+                        <span class="fact">核心代码 <b>562 行</b></span>
+                        <span class="fact">双类架构 <b>print_tool / run_ai</b></span>
+                        <span class="fact">语料 <b>1183 个</b>关键词</span>
+                    </div>
+                    <div class="dir">位置：cyber\1.0\</div>
+                </div>
+
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">Cyber 2.0</span>
+                        <span class="ver-pill green">当前最新</span>
+                    </div>
+                    <p>
+                        目前功能最完整的版本。在 Cyber 1.0 架构上新增四项功能：
+                        猜数字游戏（输入"猜数字"开局）、每日运势（以日期为随机种子，同一天结果固定）、
+                        智能计算器（正则白名单校验，拦截非法输入）、聊天记录导出 txt。
+                        语料换回最大的 1740 关键词版本。另外从这版起，更新日志里的 vertion 也更正为 version。
+                        新增检查更新功能，输入当前版本即可比对并获取下载地址。
+                    </p>
+                    <div class="facts">
+                        <span class="fact">核心代码 <b>642 行</b>（全系列最大）</span>
+                        <span class="fact">语料 <b>1740 个</b>关键词</span>
+                        <span class="fact">新增 <b>feature_utils.py</b></span>
+                        <span class="fact">5 项新功能（含检查更新）</span>
+                    </div>
+                    <div class="dir">位置：cyber\2.0\（推荐使用）</div>
+                </div>
+
+                <div class="ver">
+                    <div class="ver-head">
+                        <span class="ver-name">正式版</span>
+                        <span class="ver-pill">开发中</span>
+                    </div>
+                    <p>作者目前正在制作正式版，敬请期待。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 下载 -->
+    <section class="download" id="download">
+        <div class="container">
+            <div class="dl-card fade-up">
+                <h2>下载打字机AI</h2>
+                <p>
+                    全部版本打包放在 Yukaidi 网盘。解压后进入 <code>cyber\2.0\</code>，运行 main.py 即可使用；
+                    历史版本也一并收录，供回顾体验。
+                </p>
+                <a class="dl-btn" href="https://silver.yukaidi.com/s/J5Qatz" target="_blank" rel="noopener">
+                    去 Yukaidi 网盘下载
+                </a>
+                <div class="dl-meta">
+                    <span>全部版本合集</span><span>·</span><span>免费</span><span>·</span><span>无需注册</span>
+                </div>
+                <div class="req-row">
+                    <span class="req">Python 3</span>
+                    <span class="req">tkinter（自带）</span>
+                    <span class="req">requests（查天气用）</span>
+                    <span class="req">Windows / macOS / Linux</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq" id="faq">
+        <div class="container">
+            <div class="fade-up">
+                <span class="section-tag">FAQ</span>
+                <h2 class="section-title">常见问题</h2>
+            </div>
+            <div class="faq-list">
+                <details class="fade-up delay-1">
+                    <summary>它是不是真的AI？</summary>
+                    <div class="ans">不是。它没有接入任何大模型 API，对话完全依靠 responses.json 中的关键词匹配与随机回复，每次启动时程序也会提示"这是测试模型并无真实AI功能"。把它当作聊天玩具来体验最合适。</div>
+                </details>
+                <details class="fade-up delay-1">
+                    <summary>下载后如何运行？</summary>
+                    <div class="ans">解压后进入 <code>cyber\2.0\</code> 目录，确保已安装 Python 3，并安装 requests（<code>pip install requests</code>，tkinter 为 Python 自带），然后运行 <code>main.py</code>。程序会先输出模型列表，停顿两秒后弹出聊天窗口。</div>
+                </details>
+                <details class="fade-up delay-2">
+                    <summary>怎么切换模型？</summary>
+                    <div class="ans">修改 main.py 中的模型名即可，例如把 <code>ask_gui("Deepseek")</code> 改为 <code>ask_gui("Qwen")</code>。支持 Deepseek、Doubao、Qwen、ChatGPT、豆包、千问、Kimi，默认 Deepseek。</div>
+                </details>
+                <details class="fade-up delay-2">
+                    <summary>想用终端模式或英文界面呢？</summary>
+                    <div class="ans">终端模式：将 <code>ask_gui</code> 改为 <code>ask</code>。英文界面：将 <code>ask("Deepseek")</code> 改为 <code>ask("Deepseek","en")</code>，默认中文。</div>
+                </details>
+                <details class="fade-up delay-3">
+                    <summary>语料可以自己修改吗？</summary>
+                    <div class="ans">可以。responses.json 分为 keywords（正常回复与第二次回复）、fallback（兜底）、repeat（重复提问的吐槽）、banned_words（敏感词）四个部分，按需修改即可。参考 Alpha 1.0 的 8 关键词精简模板来扩展，上手最快。</div>
+                </details>
+                <details class="fade-up delay-3">
+                    <summary>天气怎么查？</summary>
+                    <div class="ans">直接询问"今天天气"即可，未设置城市时默认查询北京。先说一句"设置城市 杭州"，之后的天气查询都会针对杭州，共支持 41 个城市。此功能需要联网。</div>
+                </details>
+                <details class="fade-up delay-4">
+                    <summary>触发禁言后无法启动怎么办？</summary>
+                    <div class="ans">运行同目录下的 <code>unban(Admin).py</code>（建议以管理员身份），删除 banned.json 后即可恢复。下次启动会显示"恭喜解禁！欢迎回来！"，之后一切如常。</div>
+                </details>
+                <details class="fade-up delay-4">
+                    <summary>Cyber 2.0 的新功能如何触发？</summary>
+                    <div class="ans">猜数字：输入"猜数字"，按提示猜 1-100 的数字；运势：输入"运势"或"今日运势"；计算器：直接输入四则运算式，如 <code>1+2*3</code>；导出记录：点击 GUI 底部的"导出记录"按钮，保存为 txt；检查更新：启动时根据提示输入当前版本号，程序会自动比对并输出下载地址。</div>
+                </details>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer>
+        <div class="container footer-inner">
+            <div class="footer-brand">
+                <span class="logo"><img src="tx.png" alt="打字机AI Logo"></span> 打字机AI · Yuansu AI
+            </div>
+            <div class="footer-links">
+                <a href="#features">功能特色</a>
+                <a href="#update">检查更新</a>
+                <a href="#archive">版本档案</a>
+                <a href="https://silver.yukaidi.com/s/J5Qatz" target="_blank" rel="noopener">下载</a>
+            </div>
+            <div>© 2026 Yuansu · 独立开发的本地项目</div>
+        </div>
+    </footer>
+
+    <!-- 回到顶部 -->
+    <button class="back-top" id="backTop" aria-label="回到顶部">↑</button>
+
+    <script>
+        // ===== Hero 打字机动画 =====
+        (function() {
+            var el = document.getElementById('heroCursor');
+            if (!el) return;
+            var text = "，一个逐字输出回复的本地聊天机器人。可以问我时间、天气，也可以玩一局猜数字。";
+            var i = 0;
+            var parent = el.parentNode;
+
+            function type() {
+                if (i < text.length) {
+                    var s = document.createElement('span');
+                    s.textContent = text[i++];
+                    parent.insertBefore(s, el);
+                    setTimeout(type, "，。？！".indexOf(text[i - 1]) > -1 ? 240 : 70);
+                } else {
+                    setTimeout(del, 2400);
+                }
+            }
+
+            function del() {
+                var spans = parent.querySelectorAll('span:not(#heroCursor)');
+                if (spans.length) {
+                    spans[spans.length - 1].remove();
+                    setTimeout(del, 24);
+                } else {
+                    i = 0;
+                    setTimeout(type, 400);
+                }
+            }
+            setTimeout(type, 900);
+        })();
+
+        // ===== 版本档案 Tab 切换 =====
+        (function() {
+            var tabs = document.querySelectorAll('.tab');
+            tabs.forEach(function(t) {
+                t.addEventListener('click', function() {
+                    tabs.forEach(function(x) {
+                        x.classList.remove('on');
+                    });
+                    t.classList.add('on');
+                    document.querySelectorAll('.ver-list').forEach(function(l) {
+                        l.classList.remove('show');
+                    });
+                    var target = document.getElementById('tab-' + t.dataset.tab);
+                    if (target) target.classList.add('show');
+                });
+            });
+        })();
+
+        // ===== 滚动淡入 =====
+        (function() {
+            var els = document.querySelectorAll('.fade-up');
+            if (!('IntersectionObserver' in window)) {
+                els.forEach(function(el) { el.classList.add('visible'); });
+                return;
+            }
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, {
+                threshold: 0.12,
+                rootMargin: '0px 0px -40px 0px'
+            });
+            els.forEach(function(el) { observer.observe(el); });
+        })();
+
+        // ===== 导航栏滚动阴影 =====
+        (function() {
+            var nav = document.getElementById('nav');
+            var backTop = document.getElementById('backTop');
+            function onScroll() {
+                var y = window.scrollY || window.pageYOffset;
+                if (y > 10) {
+                    nav.classList.add('scrolled');
+                } else {
+                    nav.classList.remove('scrolled');
+                }
+                if (y > 400) {
+                    backTop.classList.add('show');
+                } else {
+                    backTop.classList.remove('show');
+                }
+            }
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+
+            backTop.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        })();
+
+        // ===== 数字滚动动画 =====
+        (function() {
+            var nums = document.querySelectorAll('.stat .num');
+            if (!nums.length || !('IntersectionObserver' in window)) return;
+
+            function animateNum(el) {
+                var target = parseInt(el.textContent, 10);
+                if (isNaN(target)) return;
+                var duration = 1200;
+                var start = null;
+
+                function step(ts) {
+                    if (!start) start = ts;
+                    var progress = Math.min((ts - start) / duration, 1);
+                    var eased = 1 - Math.pow(1 - progress, 4);
+                    el.textContent = Math.round(target * eased);
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        el.textContent = target;
+                    }
+                }
+                requestAnimationFrame(step);
+            }
+
+            var numObserver = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        animateNum(entry.target);
+                        numObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            nums.forEach(function(n) { numObserver.observe(n); });
+        })();
+
+        // ===== 平滑滚动（锚点） =====
+        (function() {
+            document.querySelectorAll('a[href^="#"]').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    var id = this.getAttribute('href');
+                    if (id === '#' || id === '#top') return;
+                    var target = document.querySelector(id);
+                    if (target) {
+                        e.preventDefault();
+                        var offset = 80;
+                        var top = target.getBoundingClientRect().top + window.pageYOffset - offset;
+                        window.scrollTo({ top: top, behavior: 'smooth' });
+                    }
+                });
+            });
+        })();
+    </script>
+</body>
+</html>
