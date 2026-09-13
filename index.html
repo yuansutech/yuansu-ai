@@ -703,6 +703,230 @@
             color: #c45a00;
         }
 
+        /* ===== 检查更新 ===== */
+        .update {
+            background: #fafafa;
+            border-top: 1px solid #eaeaea;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .update-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            margin-top: 36px;
+            align-items: start;
+        }
+
+        @media (max-width: 880px) {
+            .update-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+        }
+
+        .update-steps {
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 30px 32px;
+            transition: transform .3s, box-shadow .3s;
+        }
+
+        .update-steps:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .06);
+        }
+
+        .update-steps h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .update-steps h3 .step-ico {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #fff5eb;
+            color: #ff8400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .step-item {
+            display: flex;
+            gap: 14px;
+            padding: 14px 0;
+            border-bottom: 1px dashed #eaeaea;
+        }
+
+        .step-item:last-child {
+            border-bottom: none;
+        }
+
+        .step-item .step-num {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #ff8400;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .step-item .step-content {
+            flex: 1;
+        }
+
+        .step-item .step-content strong {
+            display: block;
+            font-size: 14.5px;
+            color: #1a1a1a;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .step-item .step-content p {
+            font-size: 14px;
+            color: #777;
+            line-height: 1.7;
+        }
+
+        .step-item .step-content code {
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            background: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 1px 7px;
+            color: #c45a00;
+        }
+
+        .update-preview {
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 30px 32px;
+            transition: transform .3s, box-shadow .3s;
+        }
+
+        .update-preview:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .06);
+        }
+
+        .update-preview h3 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .update-preview h3 .step-ico {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: #fff5eb;
+            color: #ff8400;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        /* 终端模拟更新检测 */
+        .update-term {
+            background: #1e1e1e;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #333;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+        }
+
+        .update-term .term-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            background: #2a2a2a;
+            border-bottom: 1px solid #3a3a3a;
+        }
+
+        .update-term .term-body {
+            padding: 18px 20px 22px;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 13.5px;
+            min-height: 220px;
+            color: #ddd;
+            line-height: 1.8;
+        }
+
+        .update-term .u {
+            color: #a0b4d0;
+        }
+
+        .update-term .ai {
+            color: #8fd4a8;
+        }
+
+        .update-term .meta {
+            color: #777;
+            font-size: 12.5px;
+        }
+
+        .update-term .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: #8fd4a8;
+            vertical-align: -2px;
+            margin-left: 2px;
+            animation: blink .8s steps(1) infinite;
+        }
+
+        .update-badge {
+            display: inline-block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #2e9e5b;
+            background: #e8f7ee;
+            border: 1px solid #b8e6c8;
+            padding: 2px 12px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
+
+        .update-link {
+            display: inline-block;
+            margin-top: 18px;
+            color: #1a6dff;
+            font-weight: 600;
+            font-size: 14px;
+            transition: color .2s, transform .2s;
+        }
+
+        .update-link:hover {
+            color: #0052cc;
+            transform: translateX(4px);
+        }
+
         /* ===== 模型人格 ===== */
         .model-row {
             display: flex;
@@ -1265,6 +1489,7 @@
             <div class="nav-links">
                 <a href="#about">产品介绍</a>
                 <a href="#features">功能特色</a>
+                <a href="#update">检查更新</a>
                 <a href="#archive">版本档案</a>
                 <a href="#faq">常见问题</a>
             </div>
@@ -1416,6 +1641,84 @@
                     <h3>禁言与解禁</h3>
                     <p>命中敏感词后程序写入 banned.json 并退出，下次启动同样被拒绝。管理员运行解禁脚本后，程序会显示"恭喜解禁！欢迎回来！"</p>
                     <span class="since">Alpha 1.0 起就有</span>
+                </div>
+                <div class="feature fade-up delay-1">
+                    <div class="ico">🔄</div>
+                    <h3>检查更新</h3>
+                    <p>输入你当前的版本号，程序自动比对最新版本，并给出下载地址。无需手动翻查日志。</p>
+                    <span class="since">Cyber 2.0 新增</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 检查更新 -->
+    <section class="update" id="update">
+        <div class="container">
+            <div class="fade-up">
+                <span class="section-tag">UPDATE</span>
+                <h2 class="section-title">检查更新</h2>
+                <p class="section-sub">输入你当前使用的版本号，程序会自动比对官方最新版本，并给出下载地址。</p>
+            </div>
+
+            <div class="update-grid">
+                <div class="update-steps fade-up delay-1">
+                    <h3><span class="step-ico">📋</span> 使用步骤</h3>
+                    <div class="step-item">
+                        <span class="step-num">1</span>
+                        <div class="step-content">
+                            <strong>输入当前版本</strong>
+                            <p>在程序启动后，根据提示输入你正在使用的版本号，例如 <code>Cyber 1.0</code> 或 <code>Beta 2.0</code>。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <span class="step-num">2</span>
+                        <div class="step-content">
+                            <strong>自动比对</strong>
+                            <p>程序将你的版本与内置的最新版本清单进行比对。若已是最新，会提示"当前已是最新版本"。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <span class="step-num">3</span>
+                        <div class="step-content">
+                            <strong>获取下载地址</strong>
+                            <p>若检测到新版本，程序会直接输出 Yukaidi 网盘的下载链接，复制到浏览器打开即可。</p>
+                        </div>
+                    </div>
+                    <div class="step-item">
+                        <span class="step-num">4</span>
+                        <div class="step-content">
+                            <strong>可选：自动打开</strong>
+                            <p>在支持的环境下，程序会调用系统默认浏览器直接打开下载页面，省去手动复制的步骤。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="update-preview fade-up delay-2">
+                    <h3><span class="step-ico">💻</span> 运行效果</h3>
+                    <div class="update-term">
+                        <div class="term-bar">
+                            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+                            <span class="term-title">check_update.py</span>
+                        </div>
+                        <div class="term-body">
+                            <div class="meta">===== 打字机AI 更新检测 =====</div>
+                            <div style="height:6px"></div>
+                            <div class="u">请输入当前版本：</div>
+                            <div>Cyber 1.0</div>
+                            <div style="height:6px"></div>
+                            <div class="meta">正在检查更新...</div>
+                            <div class="ai">检测到新版本：Cyber 2.0 <span class="update-badge">最新</span></div>
+                            <div style="height:6px"></div>
+                            <div class="ai">下载地址：</div>
+                            <div style="color:#1a6dff;">https://silver.yukaidi.com/s/J5Qatz</div>
+                            <div style="height:6px"></div>
+                            <div class="meta">正在打开浏览器...<span class="cursor"></span></div>
+                        </div>
+                    </div>
+                    <a class="update-link" href="https://silver.yukaidi.com/s/J5Qatz" target="_blank" rel="noopener">
+                        直接前往下载页 →
+                    </a>
                 </div>
             </div>
         </div>
@@ -1636,12 +1939,13 @@
                         猜数字游戏（输入"猜数字"开局）、每日运势（以日期为随机种子，同一天结果固定）、
                         智能计算器（正则白名单校验，拦截非法输入）、聊天记录导出 txt。
                         语料换回最大的 1740 关键词版本。另外从这版起，更新日志里的 vertion 也更正为 version。
+                        新增检查更新功能，输入当前版本即可比对并获取下载地址。
                     </p>
                     <div class="facts">
                         <span class="fact">核心代码 <b>642 行</b>（全系列最大）</span>
                         <span class="fact">语料 <b>1740 个</b>关键词</span>
                         <span class="fact">新增 <b>feature_utils.py</b></span>
-                        <span class="fact">4 项新功能</span>
+                        <span class="fact">5 项新功能（含检查更新）</span>
                     </div>
                     <div class="dir">位置：cyber\2.0\（推荐使用）</div>
                 </div>
@@ -1720,7 +2024,7 @@
                 </details>
                 <details class="fade-up delay-4">
                     <summary>Cyber 2.0 的新功能如何触发？</summary>
-                    <div class="ans">猜数字：输入"猜数字"，按提示猜 1-100 的数字；运势：输入"运势"或"今日运势"；计算器：直接输入四则运算式，如 <code>1+2*3</code>；导出记录：点击 GUI 底部的"导出记录"按钮，保存为 txt。</div>
+                    <div class="ans">猜数字：输入"猜数字"，按提示猜 1-100 的数字；运势：输入"运势"或"今日运势"；计算器：直接输入四则运算式，如 <code>1+2*3</code>；导出记录：点击 GUI 底部的"导出记录"按钮，保存为 txt；检查更新：启动时根据提示输入当前版本号，程序会自动比对并输出下载地址。</div>
                 </details>
             </div>
         </div>
@@ -1734,6 +2038,7 @@
             </div>
             <div class="footer-links">
                 <a href="#features">功能特色</a>
+                <a href="#update">检查更新</a>
                 <a href="#archive">版本档案</a>
                 <a href="https://silver.yukaidi.com/s/J5Qatz" target="_blank" rel="noopener">下载</a>
             </div>
@@ -1855,7 +2160,6 @@
                 function step(ts) {
                     if (!start) start = ts;
                     var progress = Math.min((ts - start) / duration, 1);
-                    // easeOutQuart
                     var eased = 1 - Math.pow(1 - progress, 4);
                     el.textContent = Math.round(target * eased);
                     if (progress < 1) {
